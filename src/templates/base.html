@@ -71,9 +71,9 @@
                     </div>
                 </div>
                 <div class="d-inline-flex align-items-center d-block d-lg-none">
-                    <a href="" class="btn px-0 ml-2">
+                    <a href="{% url 'shop:filter-3' %}" class="btn px-0 ml-2">
                         <i class="fas fa-heart text-dark"></i>
-                        <span class="badge text-dark border border-dark rounded-circle" style="padding-bottom: 2px;">0</span>
+                        <span class="badge text-dark border border-dark rounded-circle" style="padding-bottom: 2px;">{{count}}</span>
                     </a>
                     <a href="" class="btn px-0 ml-2">
                         <i class="fas fa-shopping-cart text-dark"></i>
@@ -127,8 +127,11 @@
                                 <a href="{% url 'shop:filter-2' slug='kids' pk='dress' %}" class="dropdown-item">Baby's Dresses</a>
                             </div>
                         </div>
-                            <a href="{% url 'shop:filter' 'shirt' %}" class="nav-item nav-link">Shirts</a>
-                            <a href="{% url 'shop:filter' 'jean' %}" class="nav-item nav-link">Jeans</a>
+                        {% for type in types %}
+                            <a href="{% url 'shop:filter' type.slug %}" class="nav-item nav-link">{{type.Title}}s</a>
+                        {% endfor %}
+                            <!-- <a href="{% url 'shop:filter' 'jean' %}" class="nav-item nav-link">Jeans</a> -->
+                        
                     </div>
                 </nav>
             </div>

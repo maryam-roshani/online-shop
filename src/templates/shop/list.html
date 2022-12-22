@@ -13,7 +13,11 @@
                     <img class="img-fluid w-100" src="{{item.picture.url}}" alt="">
                     <div class="product-action">
                         <a class="btn btn-outline-dark btn-square" href=""><i class="fa fa-shopping-cart"></i></a>
-                        <a class="btn btn-outline-dark btn-square" href=""><i class="far fa-heart"></i></a>
+                        {% if item.like %}
+                            <a class="btn btn-outline-dark btn-square" href="{% url 'shop:like' item.id %}"><i class="fas fa-heart" style="color: red; "></i></a>
+                        {% else %}
+                            <a class="btn btn-outline-dark btn-square" href="{% url 'shop:like' item.id %}"><i class="far fa-heart"></i></a>
+                        {% endif %}
                         <a class="btn btn-outline-dark btn-square" href=""><i class="fa fa-sync-alt"></i></a>
                         <a class="btn btn-outline-dark btn-square" href="{% url 'shop:detail' item.id %}"><i class="fa fa-search"></i></a>
                     </div>
@@ -23,14 +27,14 @@
                     <div class="d-flex align-items-center justify-content-center mt-2">
                         <h5>${{item.price}}</h5><h6 class="text-muted ml-2"><del>${{item.price}}</del></h6>
                     </div>
-                    <div class="d-flex align-items-center justify-content-center mb-1">
+                    <a href="{% url 'shop:rating' item.id %}"><div class="d-flex align-items-center justify-content-center mb-1">
                         <small class="fa fa-star text-primary mr-1"></small>
                         <small class="fa fa-star text-primary mr-1"></small>
                         <small class="fa fa-star text-primary mr-1"></small>
                         <small class="fa fa-star text-primary mr-1"></small>
                         <small class="fa fa-star text-primary mr-1"></small>
                         <small>(99)</small>
-                    </div>
+                    </div></a>
                 </div>
             </div>
         </div>

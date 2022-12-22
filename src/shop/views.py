@@ -1,19 +1,24 @@
 from django.shortcuts import render, redirect
-from .models import User, Category1, Item, Item_image
+from .models import User, Category1, Item, Item_image, ItemLike, ItemRating
 from .forms import MyUserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from django_email_verification import send_email
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
+from django.contrib.auth.decorators import login_required
 
 
 # Create your views here.
 
 def home(request):
+	likes = ItemLike.objects.filter(user=request.user)
+	count = likes.count()
+	print(count)
 	categories = Category1.objects.exclude(Title='Dress')
-
-	context = {'types':categories}
+	for category in categories:
+		category.slug = category.Title.lower()
+	context = {'types':categories, 'count':count}
 	return render(request, 'index.html', context)
 
 
@@ -82,6 +87,12 @@ def logout_view(request):
 def filter_view(request, slug):
 	items = Item.objects.filter(slug=slug)
 	category = items[0].category_2
+	for item in items :
+		bike = ItemLike.objects.filter(
+		Q(user = request.user) & 
+		Q(item = item)
+		)
+		item.like = bool(bike)
 	context = { 'items':items, 'type':category }
 	return render(request, 'shop/list.html', context)
 
@@ -91,6 +102,12 @@ def filter_2_view(request, slug):
 	category = {}
 	if items :
 		category = items[0].category_1
+		for item in items :
+			bike = ItemLike.objects.filter(
+			Q(user = request.user) & 
+			Q(item = item)
+			)
+			item.like = bool(bike)
 	context = { 'items':items, 'type':category }
 	return render(request, 'shop/list.html', context)
 
@@ -103,12 +120,47 @@ def filter_3_view(request, **kwargs):
 		Q(category_1__slug=category))
 	if items :
 		category = str(slug) + ' ' + str(category)
+		for item in items :
+			bike = ItemLike.objects.filter(
+			Q(user = request.user) & 
+			Q(item = item)
+			)
+			item.like = bool(bike)
+	context = { 'items':items, 'type':category }
+	return render(request, 'shop/list.html', context)
+
+
+def filter_4_view(request):
+	likes = ItemLike.objects.filter(
+		user = request.user) 
+	items = []
+	for like in likes :
+		items.append(like.item)
+	if items :
+		category = 'LIKED'
+		for item in items :
+			bike = ItemLike.objects.filter(
+			Q(user = request.user) & 
+			Q(item = item)
+			)
+			item.like = bool(bike)
 	context = { 'items':items, 'type':category }
 	return render(request, 'shop/list.html', context)
 
 
 def detail_view(request, pk):
 	item = Item.objects.get(id=pk)
+	score = ItemRating.objects.filter(item=item)
+	count = score.count()
+	print(count)
+	s = 0
+	if count > 0 :
+		for i in range(count):
+			rate = score[i]
+			s = s + rate.rate
+		rating = float(s)/float(count)
+		item.rate = rating
+		item.save()
 	images = Item_image.objects.filter(Item=item)
 	context = {'item':item, 'images':images}
 	return render(request, 'shop/detail.html', context)
@@ -130,7 +182,7 @@ def item_like(request, pk):
         ItemLike.objects.filter(
             Q(user = request.user) & 
             Q(item = item)).delete()  
-    return redirect('rooms:room', pk=room.id)
+    return redirect('shop:detail', pk=item.id)
 
 
 @login_required(login_url='login')
