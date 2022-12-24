@@ -10,24 +10,24 @@
         <div class="col-lg-3 col-md-4 col-sm-6 pb-1">
             <div class="product-item bg-light mb-4">
                 <div class="product-img position-relative overflow-hidden">
-                    <img class="img-fluid w-100" src="{{item.picture.url}}" alt="">
+                    <img class="img-fluid w-100" src="{{item.item.picture.url}}" alt="">
                     <div class="product-action">
-                        <a class="btn btn-outline-dark btn-square" href="{% url 'shop:add-to-cart' item.id %}"><i class="fa fa-shopping-cart"></i></a>
-                        {% if item.like %}
-                            <a class="btn btn-outline-dark btn-square" href="{% url 'shop:like' item.id %}"><i class="fas fa-heart" style="color: red; "></i></a>
+                        <a class="btn btn-outline-dark btn-square" href="{% url 'shop:add-to-cart' item.item.id %}"><i class="fa fa-shopping-cart"></i></a>
+                        {% if item.item.like %}
+                            <a class="btn btn-outline-dark btn-square" href="{% url 'shop:like' item.item.id %}"><i class="fas fa-heart" style="color: red; "></i></a>
                         {% else %}
-                            <a class="btn btn-outline-dark btn-square" href="{% url 'shop:like' item.id %}"><i class="far fa-heart"></i></a>
+                            <a class="btn btn-outline-dark btn-square" href="{% url 'shop:like' item.item.id %}"><i class="far fa-heart"></i></a>
                         {% endif %}
                         <a class="btn btn-outline-dark btn-square" href=""><i class="fa fa-sync-alt"></i></a>
-                        <a class="btn btn-outline-dark btn-square" href="{% url 'shop:detail' item.id %}"><i class="fa fa-search"></i></a>
+                        <a class="btn btn-outline-dark btn-square" href="{% url 'shop:detail' item.item.id %}"><i class="fa fa-search"></i></a>
                     </div>
                 </div>
                 <div class="text-center py-4">
-                    <a class="h6 text-decoration-none text-truncate" href="">{{item.name}}</a>
+                    <a class="h6 text-decoration-none text-truncate" href="">{{item.item.name}}</a>
                     <div class="d-flex align-items-center justify-content-center mt-2">
-                        <h5>${{item.price}}</h5><h6 class="text-muted ml-2"><del>${{item.price}}</del></h6>
+                        <h5>${{item.item.price}}</h5><h6 class="text-muted ml-2"><del>${{item.item.price}}</del></h6>
                     </div>
-                    <a href="{% url 'shop:rating' item.id %}"><div class="d-flex align-items-center justify-content-center mb-1">
+                    <a href="{% url 'shop:rating' item.item.id %}"><div class="d-flex align-items-center justify-content-center mb-1">
                         <small class="fa fa-star text-primary mr-1"></small>
                         <small class="fa fa-star text-primary mr-1"></small>
                         <small class="fa fa-star text-primary mr-1"></small>
@@ -35,10 +35,16 @@
                         <small class="fa fa-star text-primary mr-1"></small>
                         <small>(99)</small>
                     </div></a>
+                    <div class="d-flex align-items-center justify-content-center mt-2">
+                        <h5> count : {{item.quantity}}</h5>
+                    </div>
                 </div>
             </div>
         </div>
         {% endfor %}
+        <div class="d-flex align-items-center justify-content-center mt-2">
+            <h5> price : ${{order.total}}</h5>
+        </div>
     </div>
 </div>
 <!-- Products End -->

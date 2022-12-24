@@ -1,5 +1,5 @@
-from django.shortcuts import render, redirect
-from .models import User, Category1, Item, Item_image, ItemLike, ItemRating
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import User, Category1, Item, Item_image, ItemLike, ItemRating, Order, OrderItem
 from .forms import MyUserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
@@ -7,6 +7,7 @@ from django_email_verification import send_email
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
 
 
 # Create your views here.
@@ -14,11 +15,19 @@ from django.contrib.auth.decorators import login_required
 def home(request):
 	likes = ItemLike.objects.filter(user=request.user)
 	count = likes.count()
+	orders = Order.objects.filter(
+		costumer = request.user,
+		active = True
+		)
+	counts = 0
+	if orders:
+		order = orders[0]
+		counts = order.items.count()
 	print(count)
 	categories = Category1.objects.exclude(Title='Dress')
 	for category in categories:
 		category.slug = category.Title.lower()
-	context = {'types':categories, 'count':count}
+	context = {'types':categories, 'count':count, 'counts':counts}
 	return render(request, 'index.html', context)
 
 
@@ -215,3 +224,90 @@ def item_rate(request, pk):
 			item = score.item
 		return redirect('shop:detail', pk=item.id)
 	return render(request, 'shop/star.html' )
+
+
+	# def add_to_cart(request,book_id):
+ #        if request.user.is_authenticated():
+ #            try:
+ #                book = Book.objects.get(pk=book_id)
+ #            except ObjectDoesNotExist:
+ #                pass
+ #            else :
+ #                try:
+ #                    cart = Cart.objects.get(user = request.user, active = True)
+ #                except ObjectDoesNotExist:
+ #                    cart = Cart.objects.create(user = request.user)
+ #                    cart.save()
+ #                    cart.add_to_cart(book_id)
+ #                    return redirect('cart')
+ #                else:
+ #                    return redirect('index')
+
+
+def remove_from_cart(request, book_id):
+    if request.user.is_authenticated():
+        try:
+            book = Book.objects.get(pk = book_id)
+        except ObjectDoesNotExist:
+            pass 
+        else:
+            cart = Cart.objects.get(user = request.user, active=True)
+            cart.remove_from_cart(book_id)
+        return redirect('cart')
+    else:
+        return redirect('index')
+
+@login_required(login_url='login')
+def add_to_cart(request, pk):
+	item = get_object_or_404(Item, id=pk)
+	order_item, created = OrderItem.objects.get_or_create(
+		item = item,
+		costumer = request.user,
+		active = True
+		)
+	order_qs = Order.objects.filter(costumer=request.user, active=True)
+	if order_qs.exists():
+		order = order_qs[0]
+		if order.items.filter(item=item).exists():
+			order_item.quantity += 1
+			order_item.save()
+			order.total += item.price
+			order.save()
+		else:
+			order.items.add(order_item)
+			order.total += item.price
+			order.save()
+	else :
+		order_date = timezone.now()
+		order = Order.objects.create(
+			costumer=request.user, 
+			order_date = order_date,
+			)
+		order.items.add(order_item)
+		order.total += item.price
+		order.save()
+
+	return redirect('shop:detail', pk=item.id)
+
+
+
+def filter_5_view(request):
+	orders = Order.objects.filter(
+		costumer = request.user,
+		active = True
+		)
+	order = []
+	if orders.exists():
+		order = orders[0] 
+		order_items = order.items.all()
+	if order_items :
+		category = 'ordered'
+	for order_item in order_items :
+			item = order_item.item
+			bike = ItemLike.objects.filter(
+			Q(user = request.user) & 
+			Q(item = item)
+			)
+			item.like = bool(bike)
+	context = { 'items':order_items, 'type':category, 'order':order }
+	return render(request, 'shop/list_2.html', context)

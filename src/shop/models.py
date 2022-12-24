@@ -89,7 +89,7 @@ class Item(models.Model):
     category_1 = models.ForeignKey(Category1, on_delete=models.SET_NULL, null=True) 
     category_2 = models.CharField(max_length=5, choices=CATEGORY2_CHOICES, null=True)
     picture = models.ImageField(upload_to='media/products', default='media/products/example.jpg')
-    price = models.DecimalField( max_digits=10, decimal_places=2)
+    price = models.FloatField()
     slug = models.SlugField(null=True, blank=True)
     rate = models.FloatField(default=0, null=True, blank=True)
 
@@ -120,16 +120,58 @@ class ItemRating(models.Model):
 
 
 class OrderItem(models.Model):
-	item = models.ForeignKey(Item, on_delete=models.CASCADE)
-	quantity = models.IntegerField(default=1)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    costumer = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    quantity = models.IntegerField(default=1)
+    active = models.BooleanField(default=True)
 
 
 class Order(models.Model):
-	costumer = models.ForeignKey(User, on_delete=models.CASCADE)
-	date_created = models.DateTimeField(auto_now_add=True)
-	date_update = models.DateTimeField(auto_now=True)
-	items = models.ManyToManyField(OrderItem)
-	total = models.DecimalField( max_digits=50, decimal_places=2)
+    costumer = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_update = models.DateTimeField(auto_now=True)
+    items = models.ManyToManyField(OrderItem)
+    total = models.FloatField(default=0.00)
+    active = models.BooleanField(default=True)
+    order_date = models.DateTimeField(null=True)
 
+# class Cart(models.Model):
+#     user = models.ForeignKey(User)
+#     active = models.BooleanField(default=True)
+#     order_date = models.DateTimeField(null=True)
+#     payment_id = models.CharField(max_length=100, null=True)
+
+#     def __unicode__(self): 
+#             return "%s" % (self.user)
+
+#     def add_to_cart(self, book_id):
+#         item = Item.objects.get(pk=item_id)
+#         try:
+#             preexisting_order = BookOrder.objects.get(book=book, cart=self)
+#             preexisting_order.quantity += 1
+#             preexisting_order.save()
+#         except BookOrder.DoesNotExist:
+#             new_order = BookOrder.objects.create(
+#                 book=book,
+#                 cart=self,
+#                 quantity=1
+#                 )
+#             new_order.save()
+
+#             def __unicode__(self):
+#                 return "%s" % (self.book_id)
+
+
+#     def remove_from_cart(self, book_id):
+#         book = Book.objects.get(pk=book_id)
+#         try:
+#             preexisting_order = BookOrder.objects.get(book=book, cart=self)
+#             if preexisting_order.quantity > 1:
+#                 preexisting_order.quantity -= 1
+#                 preexisting_order.save()
+#             else:
+#                 preexisting_order.delete()
+#         except BookOrder.DoesNotExist:
+#             pass
 
 
