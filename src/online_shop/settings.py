@@ -71,6 +71,10 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'libraries':{
+            'shopping_card': 'shop.templatetags.shopping_card',
+            
+            }
         },
     },
 ]
@@ -152,7 +156,7 @@ def verified_callback(user):
 
 
 EMAIL_VERIFIED_CALLBACK = verified_callback
-EMAIL_FROM_ADDRESS = 'email@gmail.com'
+EMAIL_FROM_ADDRESS = 'maryamroshani777@gmail.com'
 EMAIL_MAIL_SUBJECT = 'Confirm your email'
 EMAIL_MAIL_HTML = 'mail.html'
 EMAIL_MAIL_PLAIN = 'mail_body.txt'
@@ -165,6 +169,6 @@ EMAIL_MULTI_USER = False  # optional (defaults to False)
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'email@gmail.com'
-EMAIL_HOST_PASSWORD = 'password'  # os.environ['password_key'] suggested
+EMAIL_HOST_USER = 'maryamroshani777@gmail.com'
+EMAIL_HOST_PASSWORD = 'fakmhvvuwxtydxvc'  # os.environ['password_key'] suggested
 EMAIL_USE_TLS = True

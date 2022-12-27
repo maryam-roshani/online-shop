@@ -8,6 +8,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
+from django.contrib import messages
 
 
 # Create your views here.
@@ -226,24 +228,6 @@ def item_rate(request, pk):
 	return render(request, 'shop/star.html' )
 
 
-	# def add_to_cart(request,book_id):
- #        if request.user.is_authenticated():
- #            try:
- #                book = Book.objects.get(pk=book_id)
- #            except ObjectDoesNotExist:
- #                pass
- #            else :
- #                try:
- #                    cart = Cart.objects.get(user = request.user, active = True)
- #                except ObjectDoesNotExist:
- #                    cart = Cart.objects.create(user = request.user)
- #                    cart.save()
- #                    cart.add_to_cart(book_id)
- #                    return redirect('cart')
- #                else:
- #                    return redirect('index')
-
-
 def remove_from_cart(request, book_id):
     if request.user.is_authenticated():
         try:
@@ -256,6 +240,8 @@ def remove_from_cart(request, book_id):
         return redirect('cart')
     else:
         return redirect('index')
+
+
 
 @login_required(login_url='login')
 def add_to_cart(request, pk):
@@ -271,12 +257,11 @@ def add_to_cart(request, pk):
 		if order.items.filter(item=item).exists():
 			order_item.quantity += 1
 			order_item.save()
-			order.total += item.price
-			order.save()
 		else:
 			order.items.add(order_item)
 			order.total += item.price
 			order.save()
+			messages.info(request, "This item quantity was updated.")
 	else :
 		order_date = timezone.now()
 		order = Order.objects.create(
@@ -284,8 +269,6 @@ def add_to_cart(request, pk):
 			order_date = order_date,
 			)
 		order.items.add(order_item)
-		order.total += item.price
-		order.save()
 
 	return redirect('shop:detail', pk=item.id)
 
@@ -303,11 +286,78 @@ def filter_5_view(request):
 	if order_items :
 		category = 'ordered'
 	for order_item in order_items :
-			item = order_item.item
-			bike = ItemLike.objects.filter(
+		item = order_item.item
+		bike = ItemLike.objects.filter(
 			Q(user = request.user) & 
 			Q(item = item)
 			)
-			item.like = bool(bike)
+		item.like = bool(bike)
 	context = { 'items':order_items, 'type':category, 'order':order }
 	return render(request, 'shop/list_2.html', context)
+
+
+
+@login_required(login_url='login')
+def remove_one_item_from_cart(request, pk):
+	print('Hellooo')
+	item = get_object_or_404(Item, id=pk)
+	order_item = get_object_or_404(OrderItem,
+		item = item,
+		costumer = request.user,
+		active = True
+		)
+	order_qs = Order.objects.filter(costumer=request.user, active=True)
+	if order_qs.exists():
+		order = order_qs[0]
+		if order.items.filter(item=item).exists():
+			order_item.quantity -= 1
+			order_item.save()
+			order.total -= item.price
+			order.save()
+			if order_item.quantity == 0 :
+				order.items.remove(order_item)
+				order_item.delete()
+			messages.info(request, "This item quantity was updated.")
+		else:
+			messages.error(request, 'the number of this product in your cart is zero.')
+	else :
+		messages.error(request, 'the number of this product in your cart is zero.')
+
+	return redirect('shop:detail', pk=item.id)
+
+
+@login_required(login_url='login')
+def remove_from_cart(request, pk):
+	print('Hellooo')
+	item = get_object_or_404(Item, id=pk)
+	order_item = get_object_or_404(OrderItem,
+		item = item,
+		costumer = request.user,
+		active = True
+		)
+	order_qs = Order.objects.filter(costumer=request.user, active=True)
+	if order_qs.exists():
+		order = order_qs[0]
+		if order.items.filter(item=item).exists():
+			order.items.remove(order_item)
+			order_item.delete()
+			messages.info(request, "This set of products was deleted!.")
+		else:
+			messages.error(request, 'the number of this product in your cart is zero.')
+	else :
+		messages.error(request, 'the number of this product in your cart is zero.')
+
+	return redirect('shop:detail', pk=item.id)
+
+
+
+def OrderSummaryView(request):
+    try:
+        order = Order.objects.get(costumer=request.user, active=True)
+        context = {
+            'object': order
+        }
+        return render(request, 'shop/order_summary.html', context)
+    except ObjectDoesNotExist:
+        messages.warning(self.request, "You do not have an active order")
+        return redirect("shop:home")
