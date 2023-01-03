@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'shop',
     'django_email_verification',
     'verify_email.apps.VerifyEmailConfig',
+    'django_countries',
+    'crispy_forms',
 ]
 
 

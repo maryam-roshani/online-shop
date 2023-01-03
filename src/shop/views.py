@@ -10,26 +10,28 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import messages
+from .forms import CheckoutForm
 
 
 # Create your views here.
 
 def home(request):
-	likes = ItemLike.objects.filter(user=request.user)
-	count = likes.count()
-	orders = Order.objects.filter(
-		costumer = request.user,
-		active = True
-		)
-	counts = 0
-	if orders:
-		order = orders[0]
-		counts = order.items.count()
-	print(count)
 	categories = Category1.objects.exclude(Title='Dress')
 	for category in categories:
 		category.slug = category.Title.lower()
-	context = {'types':categories, 'count':count, 'counts':counts}
+	if request.user.is_authenticated:
+		likes = ItemLike.objects.filter(user=request.user)
+		count = likes.count()
+		orders = Order.objects.filter(
+			costumer = request.user,
+			active = True
+			)
+		counts = 0
+		if orders:
+			order = orders[0]
+			counts = order.items.count()
+		context = {'types':categories, 'count':count, 'counts':counts}
+	context = {'types':categories}
 	return render(request, 'index.html', context)
 
 
@@ -361,3 +363,27 @@ def OrderSummaryView(request):
     except ObjectDoesNotExist:
         messages.warning(self.request, "You do not have an active order")
         return redirect("shop:home")
+
+
+
+def CheckoutView(request):
+	try:
+		form = CheckoutForm()
+		order = Order.objects.get(costumer=request.user, active=True)
+		subtotal = order.get_total()
+		shipping = 10
+		total = subtotal + shipping
+
+		if request.method == 'POST':
+			form = forms.CheckoutForm(request.POST)
+			if form.is_valid():
+				instance = form.save(commit=False)
+				print('The form is valid.')
+				return redirect('shop:checkout')
+
+		context = {'object': order, 'total': total, 'shipping':shipping, 'form':form}
+		return render(request, 'shop/checkout.html', context)					
+	except ObjectDoesNotExist:
+		messages.warning(self.request, "You do not have an active order")
+		return redirect("shop:home")
+   
